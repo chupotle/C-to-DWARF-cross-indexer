@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assembly C Example</title>
+    <style type="text/css">
+
+        * { 
+            font-family: monospace; 
+            line-height: 1.5em;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        td
+        {
+            padding: 8px;
+            border-bottom: 2px solid black;
+            vertical-align: bottom;
+            width: 50%;
+        }
+
+        th
+        {
+            border: 1px solid black;
+        }
+
+        .grey {
+            color: #888
+        }
+
+    </style>
+</head>
+<body>
+    <table>
+
+        <!-- main -->
+
+        <tr>
+            <td> 
+                <a name="main">
+                <br>
+                int main() {<br>
+            </td>
+            <td>
+                sub    $0x18,%rsp<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td> 
+                &nbsp;&nbsp;&nbsp;&nbsp;// which bar?<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;bar();<br>
+            </td>
+            <td>
+                xor    %eax,%eax<br>
+                <a href="#bar">callq  400580</a> <br>
+            </td>
+        </tr>
+
+        <tr>
+            <td> 
+                &nbsp;&nbsp;&nbsp;&nbsp;compilicated_func();<br>
+            </td>
+            <td>
+                xor    %eax,%eax<br>
+                <a href="#complicatedfunc">callq  4005b0</a><br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                #include &lt;stdio.h&gt;<br>
+                #define NO_INLINE __attribute__((noinline))<br>
+                <br>
+                inline int blah() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;int x;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;scanf("%d", &amp;x);<br>
+            </td>
+            <td>
+                lea    0xc(%rsp),%rsi<br>
+                mov    $0x4006e4,%edi<br>
+                xor    %eax,%eax<br>
+                callq  400460<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td> 
+                &nbsp;&nbsp;&nbsp;&nbsp;// Notice that the source before this comes from a different file<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;blah();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return 0;<br>
+                }
+            </td>
+            <td>
+                xor    %eax,%eax<br>
+                add    $0x18,%rsp<br>
+                retq   <br>
+                nopw   0x0(%rax,%rax,1)<br>
+            </td>
+        </tr>
+
+        <!-- bar -->
+
+        <tr>
+            <td>
+                <a name="bar">
+                <br>
+                static void NO_INLINE bar() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// This is just to make sure this function doesn't get optimized out<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;asm("");<br>
+                }<br>
+            </td>
+            <td>
+                retq   <br>
+                nopl   0x0(%rax,%rax,1)<br>
+                nopw   %cs:0x0(%rax,%rax,1)<br>
+            </td>
+        </tr>
+
+        <!-- foo -->
+
+        <tr>
+            <td>
+                <a name="foo">
+                #include "blah.h"<br>
+                <br>
+                int foo() {<br>
+            </td>
+            <td>
+                sub    $0x8,%rsp
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Notice how there's a 4:7 ratio of asm to source lines here - this ratio<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// can be aribtrary<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;int x = 0;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 100; ++i) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x += i;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", x);
+            </td>
+            <td>
+                mov    $0x1356,%esi<br>
+                mov    $0x4006e0,%edi<br>
+                xor    %eax,%eax<br>
+                callq  400450<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;return x;<br> 
+                }
+            </td>
+            <td>mov    $0x1356,%eax<br>
+                add    $0x8,%rsp<br>
+                retq   <br>
+                nop<br>
+            </td>
+        </tr>
+
+        <!-- compilicated_func -->
+
+        <tr>
+            <td>
+                <a name="complicatedfunc">
+                <br>
+                void NO_INLINE complicated_func() {<br>
+            </td>
+            <td>
+                sub $0x18,%rsp<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;int x;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;scanf("%d\n", &amp;x);<br>
+            </td>
+            <td>
+                mov    $0x4006e0,%edi<br>
+                xor    %eax,%eax<br>
+                lea    0x8(%rsp),%rsi<br>
+                callq  400460<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;volatile int y = x;<br>
+            </td>
+            <td>
+                mov    0x8(%rsp),%eax<br>
+                mov    %eax,0xc(%rsp)<br>
+                nopl   (%rax)<br>
+            </td>
+        </tr>
+
+
+        <tr>
+            <td>
+                <a name="jmp">
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;do {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 2; ++i) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y += i;<br>
+            </td>
+            <td>
+                 mov 0xc(%rsp),%eax
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", y);<br>
+            </td>
+            <td>
+                mov $0x4006e0,%edi
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;do {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 2; ++i) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y += i;<br>
+            </td>
+            <td>
+                mov %eax,0xc(%rsp)
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", y);<br>
+            </td>
+            <td>
+                mov 0xc(%rsp),%esi<br>
+                xor %eax,%eax<br>
+                call 400450<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;do {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 2; ++i) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y += i;<br>
+            </td>
+            <td>
+                mov 0xc(%rsp),%eax
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", y);<br>
+            </td>
+            <td>
+                mov $0x4006e0,%edi
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;do {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 2; ++i) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y += i;<br>
+            </td>
+            <td>
+                add    $0x1,%eax<br>
+                mov    %eax,0xc(%rsp)<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="grey">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", y);<br>
+            </td>
+            <td>
+                mov    0xc(%rsp),%esi<br>
+                xor    %eax,%eax<br>
+                callq  400450<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;} while (y == 7);<br>
+            </td>
+            <td>
+                mov    0xc(%rsp),%eax<br>
+                cmp    $0x7,%eax<br>
+                <a href="#jmp">je     4005d0</a><br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <br>
+                &nbsp;&nbsp;&nbsp;&nbsp;printf("%d\n", y);<br>
+            </td>
+            <td>
+                mov    0xc(%rsp),%esi<br>
+                mov    $0x4006e0,%edi<br>
+                xor    %eax,%eax<br>
+                callq  400450<br>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                }<br>
+            </td>
+            <td>
+                add    $0x18,%rsp<br>
+                retq<br>
+                nopw   %cs:0x0(%rax,%rax,1)<br>
+                nopl   0x0(%rax,%rax,1)<br>
+            </td>
+        </tr>
+
+        <!-- bar -->
+
+        <tr>
+            <td>
+                <a name="bar2">
+                #include "blah.h"<br>
+                <br>
+                static void NO_INLINE bar() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;asm("");<br>
+                }
+            </td>
+            <td>
+                retq   <br>
+                nopl   0x0(%rax,%rax,1)<br>
+                nopw   %cs:0x0(%rax,%rax,1)
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <a name="func">
+                void func() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// which bar?<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;bar();<br>
+            </td>
+            <td>
+                xor    %eax,%eax<br>
+                <a href="#bar2">jmp    400630</a><br>
+                nopw   %cs:0x0(%rax,%ra<br>
+                xchg   %ax,%ax
+            </td>
+        </tr>
+
+    </table>
+</body>
+</html>
