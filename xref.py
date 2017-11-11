@@ -4,10 +4,10 @@ import os
 import subprocess
 from datetime import datetime
 
-symbol_table = []
-address_table = []
-type_table = []
-source_files = []
+symbolTable = []
+addressTable = []
+typeTable = []
+sourceFiles = []
 
 def parseAddressLine(line):
 	address = re.split("  \[", line)[0]
@@ -94,8 +94,8 @@ def getTagType(section):
 	return tag
 
 def getDeclFile(section):
-	file_name = re.split("\n", section)
-	for tmp in file_name:
+	fileName = re.split("\n", section)
+	for tmp in fileName:
 		if re.search("DW_AT_decl_file", tmp):
 			tmp = re.split(" ", tmp)
 			for tok in tmp:
@@ -104,18 +104,18 @@ def getDeclFile(section):
 					for tmp2 in tok:
 						if re.search("\.c", tmp2) or re.search("\.h", tmp2):
 							return tmp2
-	file_name = "NONE"
-	return file_name
+	fileName = "NONE"
+	return fileName
 
 
 def getDeclLine(section):
-	line_num = re.split("\n", section)
-	for tmp in line_num:
+	lineNum = re.split("\n", section)
+	for tmp in lineNum:
 		if re.search("DW_AT_decl_line", tmp):
 			tmp = re.sub(" ", "", tmp)
 			return int(re.split("DW_AT_decl_line", tmp)[1], 16)
-	line_num = "0"
-	return int(line_num, 16)
+	lineNum = "0"
+	return int(lineNum, 16)
 
 
 def getLowPc(section):
@@ -158,16 +158,16 @@ def getTypeParent(section):
 	return var_type
 
 
-def linkTokens(line, line_num, file_name):
+def cleanLine(line, lineNum, fileName):
 	tmp = line
 	tmp = tmp.replace("(", " ( ")
 	tmp = tmp.replace(")", " ) ")
 	tmp = tmp.replace("{", " { ")
 	tmp = tmp.replace("}", " } ")
 	tmp = tmp.replace("\n", "")
-	output_line = line
-	output_line = convertToHTML(output_line)
-	return output_line
+	output = line
+	output = convertToHTML(output)
+	return output
 
 
 dwarfdumped = subprocess.check_output(["dwarfdump", sys.argv[1]]).decode('utf-8')
@@ -177,50 +177,49 @@ raw_dwarf = re.split("\n< ", dwarfdumped)
 for chunk in raw_dwarf:
 	tag = getTagType(chunk)
 	name = getTagName(chunk)
-	file_name = getDeclFile(chunk)
-	line_num = getDeclLine(chunk)
+	fileName = getDeclFile(chunk)
+	lineNum = getDeclLine(chunk)
 	low_pc = getLowPc(chunk)
 	high_pc = getHighPc(chunk)
 	var_type = ""
 	if tag == "DW_TAG_structure_type" or tag == "DW_TAG_union_type":
 		var_type = getTypeParent(chunk)
-		type_table.append([name, file_name, line_num, low_pc, high_pc, var_type])
-		symbol_table.append([name, file_name, line_num, low_pc, high_pc, var_type])
+		typeTable.append([name, fileName, lineNum, low_pc, high_pc, var_type])
+		symbolTable.append([name, fileName, lineNum, low_pc, high_pc, var_type])
 	else:
 		var_type = getType(chunk)
-		symbol_table.append([name, file_name, line_num, low_pc, high_pc, var_type])
+		symbolTable.append([name, fileName, lineNum, low_pc, high_pc, var_type])
 
 
-line_addresses = ""
-line_tmp = re.split("\"filepath\"|ET", dwarfdumped)
-for line in line_tmp:
+lineAddr = ""
+lineTmp = re.split("\"filepath\"|ET", dwarfdumped)
+for line in lineTmp:
 	if re.search("0x.*NS uri", line):
-		line_addresses = line
+		lineAddr = line
 
-line_addresses = re.sub("\n", "", line_addresses)
-line_addresses = re.split("0x", line_addresses)
-for line in line_addresses:
+lineAddr = re.sub("\n", "", lineAddr)
+lineAddr = re.split("0x", lineAddr)
+for line in lineAddr:
 	address = parseAddressLine(line)
-	line_num = parseLine(line)
-	address_table.append([address, line_num])
-
-	type_table.append([file_name, line_num, low_pc, high_pc, var_type])
-index_i = 0
-index_j = 0
-for address in address_table:
-	for sym in symbol_table:
+	lineNum = parseLine(line)
+	addressTable.append([address, lineNum])
+	typeTable.append([fileName, lineNum, low_pc, high_pc, var_type])
+i = 0
+j = 0
+for address in addressTable:
+	for sym in symbolTable:
 		if sym[3] == address[0]:
 			total = int(sym[3], 16) + int(sym[4])
 			next_address = hex(total)
 			next_address = re.sub("0x", "00", next_address)
-			index_k = 0
-			for add in address_table:
+			k = 0
+			for add in addressTable:
 				if add[0] == str(next_address):
-					sym[2] = address_table[index_k - 1][1]
-				index_k = index_k + 1
-		index_j = index_j + 1
-	index_i = index_i + 1
-	index_j = 0
+					sym[2] = addressTable[k - 1][1]
+				k = k + 1
+		j = j + 1
+	i = i + 1
+	j = 0
 
 
 file_tmp = dwarfdumped.split("\n")
@@ -232,42 +231,42 @@ for line in file_tmp:
 		tmp = re.split("/", tmp[1])
 		for tok in tmp:
 			if re.search("\.c", tok) or re.search("\.h", tok):
-				source_files.append([tok, pc])
+				sourceFiles.append([tok, pc])
 
 try:
     sub_directory = os.stat('html')
 except:
     sub_directory = os.mkdir('html')
 
-line_num = 1
+lineNum = 1
 target = open("html/assembly.html", 'w')
 target.write("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body><pre>")
-main_num = 0
-for source_path in source_files:
-	with open(source_path[0], 'r') as source:
-		target.write("<a name=\"" + str(line_num) + "\"></a>")
+mainNum = 0
+for sourceFiles in sourceFiles:
+	with open(sourceFiles[0], 'r') as source:
+		target.write("<a name=\"" + str(lineNum) + "\"></a>")
 		for line in source.readlines():
-			line = linkTokens(line, line_num, source_path)
-			line_num = line_num + 1
+			line = cleanLine(line, lineNum, sourceFiles)
+			lineNum = lineNum + 1
 			if re.search("main", line):
-				main_num=line_num
-			target.write(line + "<a name=\"" + str(line_num) + "\"></a>")
+				mainNum=lineNum
+			target.write(line + "<a name=\"" + str(lineNum) + "\"></a>")
 		source.close()
 
 objdumpline = re.split("\n< ", objdumped)
 for linee in objdumpline:
-	target.write(linee + "<a name=\"" + str(line_num) + "\"></a>")
+	target.write(linee + "<a name=\"" + str(lineNum) + "\"></a>")
 target.write("</pre></body></html>")
 target.close()
 
-index_page = open("html/index.html", 'w')
+indexPage = open("html/index.html", 'w')
 index_i = 0
-index_page.write("<html>")
-index_page.write("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body>")
-index_page.write(os.getcwd() + "<br>")
-index_page.write(str(datetime.now()) + "<br>")
-index_page.write("<a href=\"assembly.html\">" + "assembly" + "</a><br>")
-for sym in symbol_table:
+indexPage.write("<html>")
+indexPage.write("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body>")
+indexPage.write(os.getcwd() + "<br>")
+indexPage.write(str(datetime.now()) + "<br>")
+indexPage.write("<a href=\"assembly.html\">" + "assembly" + "</a><br>")
+for sym in symbolTable:
 	if sym[0] == "main":
-		index_page.write("<a href=\"" + "assembly.html#" + str(main_num) + "\">" + "main" + "</a>")
-index_page.close()
+		indexPage.write("<a href=\"" + "assembly.html#" + str(mainNum) + "\">" + "main" + "</a>")
+indexPage.close()
