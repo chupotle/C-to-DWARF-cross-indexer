@@ -239,7 +239,7 @@ for sym in symbol_table:
 	print(sym)
 
 line_num = 1
-target = open("HTML/assembly.html", 'w')
+target = open("html/assembly.html", 'w')
 target.write("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body><pre>")
 main_num = 0
 for source_path in source_files:
@@ -259,7 +259,7 @@ for linee in objdumpline:
 target.write("</pre></body></html>")
 target.close()
 
-index_page = open("HTML/index.html", 'w')
+index_page = open("html/index.html", 'w')
 index_i = 0
 index_page.write("<html>")
 index_page.write("<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body>")
