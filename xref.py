@@ -170,7 +170,7 @@ def linkTokens(line, line_num, file_name):
 	return output_line
 
 
-dwarfdumped = subprocess.check_output(["./dwarfdump", sys.argv[1]]).decode('utf-8')
+dwarfdumped = subprocess.check_output(["dwarfdump", sys.argv[1]]).decode('utf-8')
 objdumped = subprocess.check_output(['objdump','-d', sys.argv[1]]).decode('utf-8')
 
 raw_dwarf = re.split("\n< ", dwarfdumped)
@@ -234,9 +234,10 @@ for line in file_tmp:
 			if re.search("\.c", tok) or re.search("\.h", tok):
 				source_files.append([tok, pc])
 
-
-for sym in symbol_table:
-	print(sym)
+try:
+    sub_directory = os.stat('html')
+except:
+    sub_directory = os.mkdir('html')
 
 line_num = 1
 target = open("html/assembly.html", 'w')
