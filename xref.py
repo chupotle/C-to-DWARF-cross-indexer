@@ -11,7 +11,6 @@ type_table = []
 
 # Hold source/target code file information
 source_files = []
-target_files = []
 
 
 def parseAddressLine(line):
@@ -156,31 +155,6 @@ def tokenUsed(tok, used_tokens):
 		if tok == tmp:
 			return True
 	return False
-
-
-def convertSymbols(tokens, line, line_num, file_name):
-	output = line
-	used_tokens = []
-	for tok in tokens:
-		for sym in symbol_table:
-			if tok == sym[1]:   # If tok and symbol in table are the same
-				if not tokenUsed(tok, used_tokens):
-					temp_output = inScope(tok, line_num, file_name, sym, output)
-					if temp_output != "NOT IN SCOPE":
-						output = temp_output
-						used_tokens.append(tok)
-	# Links #include files
-	for tok in tokens:
-		for name in source_files:
-			if tok == "\"" + name[0] + "\"":
-				temp = name[0].replace("\"", "")
-				if re.search("\.c", temp):
-					temp = temp.replace("\.c", ".html")
-					output = re.sub(tok, "<a href=\"" + temp + "\">" + tok + "</a>", output)
-				if re.search("\.h", temp):
-					temp = temp.replace("\.h", "_header.html")
-					output = re.sub(tok, "<a href=\"" + temp + "\">" + tok + "</a>", output)
-	return output
 
 # converts all types to HTML and styles them
 
@@ -340,10 +314,10 @@ def linkTokens(line, line_num, file_name):
 	tmp = tmp.replace("{", " { ")
 	tmp = tmp.replace("}", " } ")
 	tmp = tmp.replace("\n", "")
+
 	tokens = re.split(" |,|;|\t|\*|\+|\-|\-|/|\.\w", tmp)
 	output_line = line
 	output_line = convertIllegalSymbols(output_line)
-	output_line = convertSymbols(tokens, output_line, line_num, file_name)
 	output_line = convertToHTML(output_line)
 
 	return output_line
@@ -417,16 +391,6 @@ for line in file_tmp:
 			if re.search("\.c", tok) or re.search("\.h", tok):
 				source_files.append([tok, pc])
 
-for source in source_files:
-	if re.search("\.c", source[0]):
-		path = re.split("\.c", source[0])[0]
-		path = path + ".html"
-		target_files.append(path)
-	if re.search("\.h", source[0]):
-		path = re.split("\.h", source[0])[0]
-		path = path + "_header.html"
-		target_files.append(path)
-
 # Create Directory to hold .html files
 directory = 'HTML'
 try:
@@ -441,12 +405,14 @@ line_num = 1
 # Copying source code to target files
 target = open("HTML/assembly.html", 'w')
 target.write("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/></head><body><pre>")
+
 for source_path in source_files:
 	with open(source_path[0], 'r') as source:
 		target.write("<a name=\"" + str(line_num) + "\"></a>")
-		line_num = 1
 		for line in source.readlines():
+			print(line_num)
 			line = linkTokens(line, line_num, source_path)
+
 			line_num = line_num + 1
 			target.write(line + "<a name=\"" + str(line_num) + "\"></a>")
 		source.close()
@@ -462,9 +428,5 @@ index_page.write(str(datetime.now()) + "<br>")
 index_page.write("<a href=\"assembly.html\">" + "assembly" + "</a><br>")
 for sym in symbol_table:
 	if sym[0] == "DW_TAG_subprogram" and sym[1] == "main":
-		path = re.sub("\.c", ".html#" + str(sym[3]), sym[2])
-		index_page.write("<a href=\"" + path + "\">" + sym[1] + "</a>")
-
-
-
+		index_page.write("<a href=\"" + "assembly.html#" + str(3) + "\">" + sym[1] + "</a>")
 index_page.close()
